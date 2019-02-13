@@ -29,7 +29,8 @@ class Features(object):
 			print "username = " + str(user_directory)
 			phone_number = user_directory.split("-")
 			phone_number = phone_number[0]
-			phone_number = int(phone_number)
+                        # could be just username instead of phone number
+			#phone_number = int(phone_number)
 			print phone_number
 			print
 			user_directory_path = os.path.join(direc, user_directory)

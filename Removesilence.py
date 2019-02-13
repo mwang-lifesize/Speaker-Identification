@@ -7,7 +7,8 @@ import matplotlib.pyplot as plt
 from scipy.spatial import distance
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
-from sklearn.lda import LDA
+#from sklearn.lda import LDA
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 import csv
 import os.path
 import sklearn

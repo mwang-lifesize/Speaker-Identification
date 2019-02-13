@@ -2,6 +2,7 @@ import numpy
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation
 from keras.optimizers import SGD
+from keras.callbacks import ModelCheckpoint
 import math
 import VQ
 import mlpy
@@ -72,7 +73,11 @@ class Train(object):
 					  optimizer=sgd,
 					  metrics=['accuracy'])
 
-		self.model.fit(X_train, y_train, nb_epoch=epochs, validation_split= 0.2, batch_size=32)
+                # save better result 
+                filepath = "checkpoing_weights.h5"
+                checkpoint = ModelCheckpoint(filepath, monitor='val_acc', verbose=1, save_best_only=True, mode='max')
+                callbacks_list = [checkpoint]
+		self.model.fit(X_train, y_train, nb_epoch=epochs, validation_split= 0.2, batch_size=32, callbacks=callbacks_list)
 		self.mapping = self.featuresObj.mapping
 
 	
@@ -87,7 +92,7 @@ class Train(object):
 		while (speaker_no < num_speakers):
 			speaker_no += 1
 			filename = testdirec + str(speaker_no) + ".wav"
-			print filename
+			print( filename )
 			print
 
 			flag = self.testFile(filename, model, pca, speaker_no-1)
@@ -102,22 +107,25 @@ class Train(object):
 
 	def testFile(self, filename, model, pca, phone_number, mapping):
 		test_data = self.featuresObj.getFeaturesFromWave(filename)  ### frames by features(34)
+                print("before testing")
 		X_test = test_data
 		X_test = pca.transform(X_test)
 		modelNN = model.predict(X_test)
 
 		sumRows = numpy.sum(modelNN, axis=0)
 		sumRows /= modelNN.shape[0]
+                print "sumRows is:"
 		print sumRows
 		print
 		index = numpy.argmax(sumRows)
+                print "sumRows index :", index
 		print sumRows[index]
 		print mapping
 		user_id = mapping[str(index+1)]
 		print user_id
 		print phone_number
 		try:
-			if int(phone_number)==int(user_id):
+			if phone_number==user_id:
 				if sumRows[index]<0.4:
 					print ' true but less than 0.4' 
 					print
@@ -173,7 +181,7 @@ if __name__ == "__main__":
 			speakers = int(fcount(direc))
 
 			t = Train(frame_size=0.032, frame_shift=0.016)
-			t.train(direc, 20)
+			t.train(direc, 2360)
 			json_string = t.model.to_json()
 			open('my_model_architecture.json', 'w').write(json_string)
 			t.model.save_weights('my_model_weights.h5', overwrite = True)
@@ -220,12 +228,15 @@ if __name__ == "__main__":
 						  metrics=['accuracy'])
 			print "model is read "
 			if flag:
+                                print("before testing")
 				tot_positives = t.test(testdirec, model, pca_loaded)
 				print tot_positives
 			else:
 				# phone_number = raw_input('Please enter phone number for current user:')
 				phone_number = sys.argv[2]
+                                print("before testingFile")
 				true = t.testFile(testdirec, model, pca_loaded, phone_number, mapping)
+                                print("after testing")
 				print true
 				print
 		else:
